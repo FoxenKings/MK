@@ -552,17 +552,57 @@
             
             // Отправить данные в бот
             Telegram.WebApp.sendData(JSON.stringify(data));
+            Telegram.WebApp.close();
         }
 
         // Преобразование action в читаемый текст
         function actionToLabel(action) {
             const map = {
-                'create_material': 'Создание материала',
-                'create_product': 'Создание изделия',
-                'receipt_material_normal': 'Поступление материалов',
-                'receipt_material_defect': 'Поступление брака материалов',
-                // Добавьте остальные соответствия
-            };
+                // Создание
+        'create_material': 'Создание записи материала',
+        'create_product': 'Создание записи изделия',
+        
+        // Поступление материалов
+        'receipt_material_normal': 'Обычное поступление материалов',
+        'receipt_material_defect': 'Поступление материалов с браком',
+        
+        // Поступление изделий
+        'receipt_products_normal': 'Обычное поступление изделий',
+        'receipt_products_defect': 'Поступление изделий с браком',
+        
+        // Производство
+        'manufacturing_product': 'Изготовление изделия',
+        'write_off_of_defects': 'Списание брака',
+        
+        // Отгрузка
+        'shipment_of_regular_products': 'Отгрузка обычных изделий',
+        'shipment_of_defective_products': 'Отгрузка бракованных изделий',
+        'shipment_combined': 'Комбинированная отгрузка',
+        
+        // Отчеты
+        'material_remaining_report': 'Отчет по остаткам материалов',
+        'product_balance_report': 'Отчет по остаткам изделий',
+        'transaction_log_report': 'Журнал операций',
+        'amount_log_report': 'Журнал сумм (месяц)',
+        
+        // Брак материалов
+        'material_defects_magazine': 'Журнал брака материалов',
+        'material_defects_shipment': 'Отгрузка брака материалов',
+        
+        // Брак изделий
+        'product_defects_magazine': 'Журнал брака изделий',
+        'product_defects_shipment': 'Отгрузка брака изделий',
+        
+        // Видимость материалов
+        'visibility_material_hide_post': 'Скрыть запись материала',
+        'visibility_material_show_hidden': 'Показать скрытые материалы',
+        'visibility_material_show_all': 'Показать все материалы',
+        
+        // Видимость изделий
+        'visibility_product_hide_post': 'Скрыть запись изделия',
+        'visibility_product_show_hidden': 'Показать скрытые изделия',
+        'visibility_product_show_all': 'Показать все изделия'
+        };
             return map[action] || action.replace(/_/g, ' ');
         }
 
