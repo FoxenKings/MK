@@ -517,85 +517,191 @@
     </div>
 
      <script>
-        // Инициализация Telegram WebApp
-        Telegram.WebApp.ready();
-        Telegram.WebApp.expand();
-        Telegram.WebApp.enableClosingConfirmation();
+    // Инициализация Telegram WebApp
+    Telegram.WebApp.ready();
+    Telegram.WebApp.expand();
+    Telegram.WebApp.enableClosingConfirmation();
 
-        // Показать раздел меню с анимацией
-        function showSection(sectionId) {
-            const currentActive = document.querySelector('.section.active');
-            if (currentActive) {
-                currentActive.classList.remove('active');
-            }
-            
-            setTimeout(() => {
-                document.getElementById(sectionId).classList.add('active');
-                // Тактильная отдача
-                Telegram.WebApp.HapticFeedback.impactOccurred('light');
-            }, 50);
+    // Показать раздел меню с анимацией
+    function showSection(sectionId) {
+        const currentActive = document.querySelector('.section.active');
+        if (currentActive) {
+            currentActive.classList.remove('active');
         }
+        
+        setTimeout(() => {
+            document.getElementById(sectionId).classList.add('active');
+            Telegram.WebApp.HapticFeedback.impactOccurred('light');
+        }, 50);
+    }
 
-        // Отправить действие в бота с текстовым ответом и закрыть WebApp
-        function sendAction(action) {
+    // Отправить действие в бота с текстовым ответом и закрыть WebApp
+    async function sendAction(action) {
+        try {
             // Тактильная отдача
             Telegram.WebApp.HapticFeedback.impactOccurred('medium');
             
             // Получаем текст для ответа
             const responseText = getActionResponseText(action);
             
-            // Отправляем текстовый ответ в чат
-            Telegram.WebApp.sendData(JSON.stringify({
+            // Показываем уведомление пользователю
+            showNotification(`Отправлено: ${actionToLabel(action)}`);
+            
+            // 1. Сначала отправляем данные в бота
+            await Telegram.WebApp.sendData(JSON.stringify({
                 action: action,
                 response_text: responseText,
                 user: Telegram.WebApp.initDataUnsafe.user
             }));
             
-            // Показываем уведомление пользователю
-            showNotification(`Отправлено: ${actionToLabel(action)}`);
+            // 2. Ждем немного, чтобы гарантировать отправку
+            await new Promise(resolve => setTimeout(resolve, 300));
             
-            // Закрываем WebApp через 1 секунду (после отправки данных)
-            setTimeout(() => {
-                Telegram.WebApp.close();
-            }, 1000);
-        }
-
-        // Генерация текстового ответа для каждого действия
-        function getActionResponseText(action) {
-            const responses = {
-                // ... ваши текстовые ответы ...
-            };
+            // 3. Закрываем WebApp
+            Telegram.WebApp.close();
             
-            return responses[action] || `Действие "${actionToLabel(action)}" выполнено`;
+        } catch (error) {
+            console.error('Ошибка:', error);
+            showNotification('⚠️ Ошибка при отправке');
         }
+    }
 
-        // Преобразование action в читаемый текст
-        function actionToLabel(action) {
-            const map = {
-                // ... ваше сопоставление действий ...
-            };
-            return map[action] || action.replace(/_/g, ' ');
-        }
-
-        // Показать уведомление
-        function showNotification(text) {
-            const notification = document.getElementById('notification');
-            notification.textContent = text;
-            notification.classList.add('show');
+    // Генерация текстового ответа для каждого действия
+    function getActionResponseText(action) {
+        const responses = {
+            // Создание
+            'create_material': '✅ Запись материала успешно создана!\nНовая запись добавлена в базу данных.',
+            'create_product': '✅ Запись изделия успешно создана!\nТеперь вы можете отслеживать это изделие в системе.',
             
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 2000);
-        }
+            // Поступление материалов
+            'receipt_material_normal': '📦 Поступление материалов зарегистрировано\nКоличество: X единиц\nПоставщик: Y',
+            'receipt_material_defect': '⚠️ Поступление материалов с браком зафиксировано\nБракованных единиц: X\nПричина: Y',
+            
+            // Поступление изделий
+            'receipt_products_normal': '📦 Поступление изделий зарегистрировано\nКоличество: X штук\nНомер партии: Y',
+            'receipt_products_defect': '⚠️ Поступление изделий с браком зафиксировано\nБракованных изделий: X\nПричина: Y',
+            
+            // Производство
+            'manufacturing_product': '🏭 Изготовление изделия зарегистрировано\nИзделие: X\nКоличество: Y\nДата производства: Z',
+            'write_off_of_defects': '♻️ Списание брака выполнено\nСписано единиц: X\nПричина: Y',
+            
+            // Отгрузка
+            'shipment_of_regular_products': '🚚 Отгрузка обычных изделий подтверждена\nКлиент: X\nКоличество: Y\nНакладная: Z',
+            'shipment_of_defective_products': '⚠️ Отгрузка бракованных изделий подтверждена\nКоличество: X\nПримечание: Y',
+            'shipment_combined': '🔄 Комбинированная отгрузка зарегистрирована\nОбычных изделий: X\nБракованных: Y',
+            
+            // Отчеты
+            'material_remaining_report': '📊 Отчет по остаткам материалов сформирован\nТекущие остатки: X единиц\nПодробности отправлены в чат.',
+            'product_balance_report': '📊 Отчет по остаткам изделий готов\nНа складе: X единиц\nВ производстве: Y единиц',
+            'transaction_log_report': '📝 Журнал операций подготовлен\nПериод: последние 30 дней\nКоличество записей: X',
+            'amount_log_report': '💰 Журнал сумм за месяц сформирован\nОбщая сумма: X руб.\nДетали отправлены в чат.',
+            
+            // Брак материалов
+            'material_defects_magazine': '⚠️⚙️ Журнал брака материалов обновлен\nНовых записей: X\nОбщее количество: Y',
+            'material_defects_shipment': '⚠️⚙️ Отгрузка брака материалов зарегистрирована\nКоличество: X\nПолучатель: Y',
+            
+            // Брак изделий
+            'product_defects_magazine': '⚠️🛠️ Журнал брака изделий обновлен\nНовых записей: X\nОбщее количество: Y',
+            'product_defects_shipment': '⚠️🛠️ Отгрузка брака изделий зарегистрирована\nКоличество: X\nПолучатель: Y',
+            
+            // Видимость материалов
+            'visibility_material_hide_post': '👁️⚙️ Запись материала скрыта\nID записи: X\nТеперь она не отображается в общих списках',
+            'visibility_material_show_hidden': '👁️⚙️ Скрытые материалы показаны\nНайдено скрытых записей: X',
+            'visibility_material_show_all': '👁️⚙️ Все материалы отображены\nОбщее количество: X',
+            
+            // Видимость изделий
+            'visibility_product_hide_post': '👁️🛠️ Запись изделия скрыта\nID записи: X\nТеперь оно не отображается в общих списках',
+            'visibility_product_show_hidden': '👁️🛠️ Скрытые изделия показаны\nНайдено скрытых записей: X',
+            'visibility_product_show_all': '👁️🛠️ Все изделия отображены\nОбщее количество: X'
+        };
+        
+        return responses[action] || `Действие "${actionToLabel(action)}" успешно выполнено.`;
+    }
 
-        // Адаптация под тему Telegram
-        function updateTheme() {
-            // ... ваша реализация ...
-        }
+    // Вспомогательная функция для преобразования action в читаемый текст
+    function actionToLabel(action) {
+        const map = {
+            // Создание
+            'create_material': 'Создание записи материала',
+            'create_product': 'Создание записи изделия',
+            
+            // Поступление материалов
+            'receipt_material_normal': 'Обычное поступление материалов',
+            'receipt_material_defect': 'Поступление материалов с браком',
+            
+            // Поступление изделий
+            'receipt_products_normal': 'Обычное поступление изделий',
+            'receipt_products_defect': 'Поступление изделий с браком',
+            
+            // Производство
+            'manufacturing_product': 'Изготовление изделия',
+            'write_off_of_defects': 'Списание брака',
+            
+            // Отгрузка
+            'shipment_of_regular_products': 'Отгрузка обычных изделий',
+            'shipment_of_defective_products': 'Отгрузка бракованных изделий',
+            'shipment_combined': 'Комбинированная отгрузка',
+            
+            // Отчеты
+            'material_remaining_report': 'Отчет по остаткам материалов',
+            'product_balance_report': 'Отчет по остаткам изделий',
+            'transaction_log_report': 'Журнал операций',
+            'amount_log_report': 'Журнал сумм (месяц)',
+            
+            // Брак материалов
+            'material_defects_magazine': 'Журнал брака материалов',
+            'material_defects_shipment': 'Отгрузка брака материалов',
+            
+            // Брак изделий
+            'product_defects_magazine': 'Журнал брака изделий',
+            'product_defects_shipment': 'Отгрузка брака изделий',
+            
+            // Видимость материалов
+            'visibility_material_hide_post': 'Скрытие записи материала',
+            'visibility_material_show_hidden': 'Показать скрытые материалы',
+            'visibility_material_show_all': 'Показать все материалы',
+            
+            // Видимость изделий
+            'visibility_product_hide_post': 'Скрытие записи изделия',
+            'visibility_product_show_hidden': 'Показать скрытые изделия',
+            'visibility_product_show_all': 'Показать все изделия'
+        };
+        return map[action] || action.replace(/_/g, ' ');
+    }
 
-        // Следим за изменением темы
-        Telegram.WebApp.onEvent('themeChanged', updateTheme);
-        updateTheme();
-    </script>
-</body>
-</html>
+    // Показать уведомление
+    function showNotification(text) {
+        const notification = document.getElementById('notification');
+        notification.textContent = text;
+        notification.classList.add('show');
+        
+        setTimeout(() => {
+            notification.classList.remove('show');
+        }, 2000);
+    }
+
+    // Адаптация под тему Telegram
+    function updateTheme() {
+        const theme = Telegram.WebApp.colorScheme;
+        document.documentElement.style.setProperty(
+            '--bg-color', 
+            theme === 'dark' ? '#1a202c' : '#f5f7fa'
+        );
+        document.documentElement.style.setProperty(
+            '--text-color',
+            theme === 'dark' ? '#f7fafc' : '#2d3748'
+        );
+        document.documentElement.style.setProperty(
+            '--secondary',
+            theme === 'dark' ? '#2d3748' : '#edf2f7'
+        );
+        document.documentElement.style.setProperty(
+            '--border',
+            theme === 'dark' ? '#4a5568' : '#e2e8f0'
+        );
+    }
+
+    // Следим за изменением темы
+    Telegram.WebApp.onEvent('themeChanged', updateTheme);
+    updateTheme();
+</script>
