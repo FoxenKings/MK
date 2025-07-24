@@ -516,7 +516,7 @@
         </div>
     </div>
 
-    <script>
+     <script>
         // Инициализация Telegram WebApp
         Telegram.WebApp.ready();
         Telegram.WebApp.expand();
@@ -536,92 +536,44 @@
             }, 50);
         }
 
-        // Отправить действие в бота
+        // Отправить действие в бота с текстовым ответом и закрыть WebApp
         function sendAction(action) {
-            const data = {
-                action: action,
-                user: Telegram.WebApp.initDataUnsafe.user,
-                timestamp: new Date().toISOString()
-            };
-            
             // Тактильная отдача
             Telegram.WebApp.HapticFeedback.impactOccurred('medium');
             
-            // Показать уведомление
-            showNotification(`Выполнено: ${actionToLabel(action)}`);
+            // Получаем текст для ответа
+            const responseText = getActionResponseText(action);
             
-            // Отправить данные в бот
-            Telegram.WebApp.sendData(JSON.stringify(data));
+            // Отправляем текстовый ответ в чат
+            Telegram.WebApp.sendData(JSON.stringify({
+                action: action,
+                response_text: responseText,
+                user: Telegram.WebApp.initDataUnsafe.user
+            }));
             
-            // Отправка данных в LeadTech:
-    fetch('https://api.leadtech.ru/v1/leads', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'UneU0VIlvaqLvbQoISm4ZQ3E3PRc76xRl3pdupXP9TNu9qzkBgaHTCbr1fYK'
-        },
-        body: JSON.stringify({
-            action: action,
-            user_id: data.user.id,
-            source: 'Telegram Bot'
-        })
-    })
-    .then(response => response.json())
-    .then(result => console.log('LeadTech response:', result))
-    .catch(error => console.error('Ошибка отправки в LeadTech:', error));
+            // Показываем уведомление пользователю
+            showNotification(`Отправлено: ${actionToLabel(action)}`);
+            
+            // Закрываем WebApp через 1 секунду (после отправки данных)
+            setTimeout(() => {
+                Telegram.WebApp.close();
+            }, 1000);
+        }
 
-    Telegram.WebApp.close();
-}
+        // Генерация текстового ответа для каждого действия
+        function getActionResponseText(action) {
+            const responses = {
+                // ... ваши текстовые ответы ...
+            };
+            
+            return responses[action] || `Действие "${actionToLabel(action)}" выполнено`;
         }
 
         // Преобразование action в читаемый текст
         function actionToLabel(action) {
             const map = {
-                // Создание
-        'create_material': 'Создание записи материала',
-        'create_product': 'Создание записи изделия',
-        
-        // Поступление материалов
-        'receipt_material_normal': 'Обычное поступление материалов',
-        'receipt_material_defect': 'Поступление материалов с браком',
-        
-        // Поступление изделий
-        'receipt_products_normal': 'Обычное поступление изделий',
-        'receipt_products_defect': 'Поступление изделий с браком',
-        
-        // Производство
-        'manufacturing_product': 'Изготовление изделия',
-        'write_off_of_defects': 'Списание брака',
-        
-        // Отгрузка
-        'shipment_of_regular_products': 'Отгрузка обычных изделий',
-        'shipment_of_defective_products': 'Отгрузка бракованных изделий',
-        'shipment_combined': 'Комбинированная отгрузка',
-        
-        // Отчеты
-        'material_remaining_report': 'Отчет по остаткам материалов',
-        'product_balance_report': 'Отчет по остаткам изделий',
-        'transaction_log_report': 'Журнал операций',
-        'amount_log_report': 'Журнал сумм (месяц)',
-        
-        // Брак материалов
-        'material_defects_magazine': 'Журнал брака материалов',
-        'material_defects_shipment': 'Отгрузка брака материалов',
-        
-        // Брак изделий
-        'product_defects_magazine': 'Журнал брака изделий',
-        'product_defects_shipment': 'Отгрузка брака изделий',
-        
-        // Видимость материалов
-        'visibility_material_hide_post': 'Скрыть запись материала',
-        'visibility_material_show_hidden': 'Показать скрытые материалы',
-        'visibility_material_show_all': 'Показать все материалы',
-        
-        // Видимость изделий
-        'visibility_product_hide_post': 'Скрыть запись изделия',
-        'visibility_product_show_hidden': 'Показать скрытые изделия',
-        'visibility_product_show_all': 'Показать все изделия'
-        };
+                // ... ваше сопоставление действий ...
+            };
             return map[action] || action.replace(/_/g, ' ');
         }
 
@@ -638,23 +590,7 @@
 
         // Адаптация под тему Telegram
         function updateTheme() {
-            const theme = Telegram.WebApp.colorScheme;
-            document.documentElement.style.setProperty(
-                '--bg-color', 
-                theme === 'dark' ? '#1a202c' : '#f5f7fa'
-            );
-            document.documentElement.style.setProperty(
-                '--text-color',
-                theme === 'dark' ? '#f7fafc' : '#2d3748'
-            );
-            document.documentElement.style.setProperty(
-                '--secondary',
-                theme === 'dark' ? '#2d3748' : '#edf2f7'
-            );
-            document.documentElement.style.setProperty(
-                '--border',
-                theme === 'dark' ? '#4a5568' : '#e2e8f0'
-            );
+            // ... ваша реализация ...
         }
 
         // Следим за изменением темы
