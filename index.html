@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Главное меню</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg-color: var(--tg-theme-bg-color, #f5f7fa);
+            --text-color: var(--tg-theme-text-color, #2d3748);
+            --primary: var(--tg-theme-button-color, #4299e1);
+            --primary-hover: var(--tg-theme-button-color, #3182ce);
+            --secondary: var(--tg-theme-secondary-bg-color, #edf2f7);
+            --border: var(--tg-theme-hint-color, #e2e8f0);
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.2s ease;
+            --radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .container {
+            max-width: 100%;
+            padding: 16px;
+            margin: 0 auto;
+        }
+
+        .header {
+            position: sticky;
+            top: 0;
+            background: var(--bg-color);
+            z-index: 10;
+            padding: 16px 0;
+            margin-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .menu-item {
+            background: var(--primary);
+            color: white;
+            border-radius: var(--radius);
+            padding: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+            border: none;
+            width: 100%;
+            text-align: left;
+            font-size: 1rem;
+        }
+
+        .menu-item:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .menu-item:active {
+            transform: translateY(0);
+        }
+
+        .menu-item i {
+            margin-right: 12px;
+            font-size: 1.25rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .menu-item .label {
+            flex-grow: 1;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 16px;
+            color: var(--primary);
+            cursor: pointer;
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            transition: var(--transition);
+            font-weight: 500;
+            width: 100%;
+            background: var(--secondary);
+            border: none;
+        }
+
+        .back-button:hover {
+            background: var(--border);
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 24px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 100;
+            box-shadow: var(--shadow-md);
+            font-size: 0.875rem;
+            max-width: 90%;
+            text-align: center;
+        }
+
+        .notification.show {
+            opacity: 1;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 0.75rem;
+            margin-left: 8px;
+            font-weight: 500;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Адаптация для темной темы */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #1a202c;
+                --text-color: #f7fafc;
+                --secondary: #2d3748;
+                --border: #4a5568;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Главное меню -->
+        <div id="main-menu" class="section active">
+            <div class="header">
+                <h2>🏠  Главное меню</h2>
+            </div>
+            <div class="menu-grid">
+                <button class="menu-item" onclick="showSection('creation')">
+                    <i>🖊️</i>
+                    <span class="label">Создание</span>
+                </button>
+                
+                <button class="menu-item" onclick="showSection('receipt')">
+                    <i>📦</i>
+                    <span class="label">Поступление</span>
+                </button>
+                
+                <button class="menu-item" onclick="showSection('production')">
+                    <i>🏭</i>
+                    <span class="label">Производство</span>
+                </button>
+                
+                <button class="menu-item" onclick="showSection('shipment')">
+                    <i>🚚</i>
+                    <span class="label">Отгрузка</span>
+                </button>
+                
+                <button class="menu-item" onclick="showSection('reports')">
+                    <i>📊</i>
+                    <span class="label">Отчеты</span>
+                </button>
+                
+                <button class="menu-item" onclick="showSection('defects')">
+                    <i>⚠️</i>
+                    <span class="label">Брак</span>
+                </button>
+                
+                <button class="menu-item" onclick="showSection('visibility')">
+                    <i>👁️</i>
+                    <span class="label">Видимость</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Создание -->
+        <div id="creation" class="section">
+            <div class="header">
+                <h2>🖊️ Создание</h2>
+            </div>
+            <div class="menu-grid">
+                <button class="menu-item" onclick="sendAction('create_material')">
+                    <i>🖊️⚙️</i>
+                    <span class="label">Создать запись материала</span>
+                </button>
+                <button class="menu-item" onclick="sendAction('create_product')">
+                    <i>🖊️🛠️</i>
+                    <span class="label">Создать запись изделия</span>
+                </button>
+            </div>
+            <button class="back-button" onclick="showSection('main-menu')">
+                <i>⬅️</i> Назад в главное меню
+            </button>
+        </div>
+
+        <!-- Поступление -->
+        <div id="receipt" class="section">
+            <div class="header">
+                <h2>📦 Поступление</h2>
+            </div>
+            <div class="menu-grid">
+                <button class="menu-item" onclick="showSection('receipt-materials')">
+                    <i>📦⚙️</i>
+                    <span class="label">Материалы</span>
+                </button>
+                <button class="menu-item" onclick="showSection('receipt-products')">
+                    <i>📦🛠️</i>
+                    <span class="label">Изделия</span>
+                </button>
+            </div>
+            <button class="back-button" onclick="showSection('main-menu')">
+                <i>⬅️</i> Назад в главное меню
+            </button>
+        </div>
+
+        <!-- Подменю: Поступление материалов -->
+        <div id="receipt-materials" class="section">
+            <div class="header">
+                <h2>📦⚙️ Поступление материалов</h2>
+            </div>
+            <div class="menu-grid">
+                <button class="menu-item" onclick="sendAction('receipt_material_normal')">
+                    <i>📦⚙️✅</i>
+                    <span class="label">Обычное поступление</span>
+                </button>
+                <button class="menu-item" onclick="sendAction('receipt_material_defect')">
+                    <i>📦⚙️❌</i>
+                    <span class="label">С браком</span>
+                </button>
+            </div>
+            <button class="back-button" onclick="showSection('receipt')">
+                <i>⬅️</i> Назад к поступлению
+            </button>
+        </div>
+
+        <!-- Подменю: Поступление изделий -->
+        <div id="receipt-products" class="section">
+            <div class="header">
+                <h2>📦🛠️ Поступление изделий</h2>
+            </div>
+            <div class="menu-grid">
+                <button class="menu-item" onclick="sendAction('receipt_products_normal')">
+                    <i>📦🛠️✅</i>
+                    <span class="label">Обычное поступление</span>
+                </button>
+                <button class="menu-item" onclick="sendAction('receipt_products_defect')">
+                    <i>📦🛠️❌</i>
+                    <span class="label">С браком</span>
+                </button>
+            </div>
+            <button class="back-button" onclick="showSection('receipt')">
+                <i>⬅️</i> Назад к поступлению
+            </button>
+        </div>
+        
+        <!-- Производство -->
+        <div id="production" class="section">
+            <div class="header">
+                <h2>🏭 Производство</h2>
+            </div>
+            <div class="menu-grid">
+                <button class="menu-item" onclick="sendAction('manufacturing_product')">
+                    <i>🏭🛠️</i>
+                    <span class="label">Изготовление изделия</span>
+                </button>
+                <button class="menu-item" onclick="sendAction('write_off_of_defects')">
+                    <i>🏭♻️</i>
+                    <span class="label">Списание брака</span>
+                </button>
+            </div>
+            <button class="back-button" onclick="showSection('main-menu')">
+                <i>⬅️</i> Назад в главное меню
+            </button>
+        </div>
+
+        <!-- Отгрузка -->
+        <div id="shipment" class="section">
+            <div class="header">
+                <h2>🚚 Отгрузка</h2>
+            </div>
+            <div class="menu-grid">
+                <button class="menu-item" onclick="sendAction('shipment_of_regular_products')">
+                    <i>🚚🛠️</i>
+                    <span class="label">Обычные изделия</span>
+                </button>
+                <button class="menu-item" onclick="sendAction('shipment_of_defective_products')">
+                    <i>🚚⚠️</i>
+                    <span class="label">Бракованные изделия</span>
+                </button>
+                <button class="menu-item" onclick="sendAction('shipment_combined')">
+                    <i>🚚🔄</i>
+                    <span class="label">Комбинированная отгрузка</span>
+                </button>
+            </div>
+            <button class="back-button" onclick="showSection('main-menu')">
+                <i>⬅️</i> Назад в главное меню
+            </button>
+        </div>
+
+        <!-- Отчеты -->
+        <div id="reports" class="section">
+            <div class="header">
+                <h2>📊 Отчеты</h2>
+            </div>
+            <div class="menu-grid">
+                <button class="menu-item" onclick="sendAction('material_remaining_report')">
+                    <i>📊⚙️</i>
+                    <span class="label">Остатки материалов</span>
+                </button>
+                <button class="menu-item" onclick="sendAction('product_balance_report')">
+                    <i>📊🛠️</i>
+                    <span class="label">Остатки изделий</span>
+                </button>
+                <button class="menu-item" onclick="sendAction('transaction_log_report')">
+                    <i>📊📝</i>
+                    <span class="label">Журнал операций</span>
+                </button>
+                <button class="menu-item" onclick="sendAction('amount_log_report')">
+                    <i>📊💰</i>
+                    <span class="label">Журнал сумм (месяц)</span>
+                </button>
+            </div>
+            <button class="back-button" onclick="showSection('main-menu')">
+                <i>⬅️</i> Назад в главное меню
+            </button>
+        </div>
+
+        <!-- Брак -->
+        <div id="defects" class="section">
+            <div class="header">
+                <h2>⚠️ Брак</h2>
+            </div>
+            <div class="menu-grid">
+                <button class="menu-item" onclick="showSection('defects-materials')">
+                    <i>⚠️⚙️</i>
+                    <span class="label">Материалы</span>
+                </button>
+                <button class="menu-item" onclick="showSection('defects-products')">
+                    <i>⚠️🛠️</i>
+                    <span class="label">Изделия</span>
+                </button>
+            </div>
+            <button class="back-button" onclick="showSection('main-menu')">
+                <i>⬅️</i> Назад в главное меню
+            </button>
+        </div>
+
+        <!-- Подменю: Брак материалы -->
+        <div id="defects-materials" class="section">
+            <div class="header">
+                <h2>⚠️⚙️ Брак материалов</h2>
+            </div>
+            <div class="menu-grid">
+                <button class="menu-item" onclick="sendAction('material_defects_magazine')">
+                    <i>⚠️⚙️📝</i>
+                    <span class="label">Журнал</span>
+                </button>
+                <button class="menu-item" onclick="sendAction('material_defects_shipment')">
+                    <i>⚠️⚙️🚛</i>
+                    <span class="label">Отгрузка</span>
+                </button>
+            </div>
+            <button class="back-button" onclick="showSection('defects')">
+                <i>⬅️</i> Назад к браку
+            </button>
+        </div>
+
+        <!-- Подменю: Брак изделий -->
+        <div id="defects-products" class="section">
+            <div class="header">
+                <h2>⚠️🛠️ Брак изделий</h2>
+            </div>
+            <div class="menu-grid">
+                <button class="menu-item" onclick="sendAction('product_defects_magazine')">
+                    <i>⚠️🛠️📝</i>
+                    <span class="label">Журнал</span>
+                </button>
+                <button class="menu-item" onclick="sendAction('product_defects_shipment')">
+                    <i>⚠️🛠️🚛</i>
+                    <span class="label">Отгрузка</span>
+                </button>
+            </div>
+            <button class="back-button" onclick="showSection('defects')">
+                <i>⬅️</i> Назад к браку
+            </button>
+        </div>
+
+        <!-- Видимость -->
+        <div id="visibility" class="section">
+            <div class="header">
+                <h2>👁️ Видимость</h2>
+            </div>
+            <div class="menu-grid">
+                <button class="menu-item" onclick="showSection('visibility-materials')">
+                    <i>👁️⚙️</i>
+                    <span class="label">Материалы</span>
+                </button>
+                <button class="menu-item" onclick="showSection('visibility-products')">
+                    <i>👁️🛠️</i>
+                    <span class="label">Изделия</span>
+                </button>
+            </div>
+            <button class="back-button" onclick="showSection('main-menu')">
+                <i>⬅️</i> Назад в главное меню
+            </button>
+        </div>
+
+        <!-- Подменю: Видимость материалы -->
+        <div id="visibility-materials" class="section">
+            <div class="header">
+                <h2>👁️⚙️ Видимость материалов</h2>
+            </div>
+            <div class="menu-grid">
+                <button class="menu-item" onclick="sendAction('visibility_material_hide_post')">
+                    <i>👁️⚙️🔒</i>
+                    <span class="label">Скрыть запись</span>
+                </button>
+                <button class="menu-item" onclick="sendAction('visibility_material_show_hidden')">
+                    <i>👁️⚙️🔓</i>
+                    <span class="label">Показать скрытую</span>
+                </button>
+                <button class="menu-item" onclick="sendAction('visibility_material_show_all')">
+                    <i>👁️⚙️🔍</i>
+                    <span class="label">Показать все</span>
+                </button>
+            </div>
+            <button class="back-button" onclick="showSection('visibility')">
+                <i>⬅️</i> Назад к видимости
+            </button>
+        </div>
+
+        <!-- Подменю: Видимость изделий -->
+        <div id="visibility-products" class="section">
+            <div class="header">
+                <h2>👁️🛠️ Видимость изделий</h2>
+            </div>
+            <div class="menu-grid">
+                <button class="menu-item" onclick="sendAction('visibility_product_hide_post')">
+                    <i>👁️🛠️🔒</i>
+                    <span class="label">Скрыть запись</span>
+                </button>
+                <button class="menu-item" onclick="sendAction('visibility_product_show_hidden')">
+                    <i>👁️🛠️🔓</i>
+                    <span class="label">Показать скрытую</span>
+                </button>
+                <button class="menu-item" onclick="sendAction('visibility_product_show_all')">
+                    <i>👁️🛠️🔍</i>
+                    <span class="label">Показать все</span>
+                </button>
+            </div>
+            <button class="back-button" onclick="showSection('visibility')">
+                <i>⬅️</i> Назад к видимости
+            </button>
+        </div>
+        
+        <div id="notification" class="notification">
+            Действие выполнено
+        </div>
+    </div>
+
+    <script>
+        // Инициализация Telegram WebApp
+        Telegram.WebApp.ready();
+        Telegram.WebApp.expand();
+        Telegram.WebApp.enableClosingConfirmation();
+
+        // Показать раздел меню с анимацией
+        function showSection(sectionId) {
+            const currentActive = document.querySelector('.section.active');
+            if (currentActive) {
+                currentActive.classList.remove('active');
+            }
+            
+            setTimeout(() => {
+                document.getElementById(sectionId).classList.add('active');
+                // Тактильная отдача
+                Telegram.WebApp.HapticFeedback.impactOccurred('light');
+            }, 50);
+        }
+
+        // Отправить действие в бота
+        function sendAction(action) {
+            const data = {
+                action: action,
+                user: Telegram.WebApp.initDataUnsafe.user,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Тактильная отдача
+            Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+            
+            // Показать уведомление
+            showNotification(`Выполнено: ${actionToLabel(action)}`);
+            
+            // Отправить данные в бот
+            Telegram.WebApp.sendData(JSON.stringify(data));
+        }
+
+        // Преобразование action в читаемый текст
+        function actionToLabel(action) {
+            const map = {
+                'create_material': 'Создание материала',
+                'create_product': 'Создание изделия',
+                'receipt_material_normal': 'Поступление материалов',
+                'receipt_material_defect': 'Поступление брака материалов',
+                // Добавьте остальные соответствия
+            };
+            return map[action] || action.replace(/_/g, ' ');
+        }
+
+        // Показать уведомление
+        function showNotification(text) {
+            const notification = document.getElementById('notification');
+            notification.textContent = text;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 2000);
+        }
+
+        // Адаптация под тему Telegram
+        function updateTheme() {
+            const theme = Telegram.WebApp.colorScheme;
+            document.documentElement.style.setProperty(
+                '--bg-color', 
+                theme === 'dark' ? '#1a202c' : '#f5f7fa'
+            );
+            document.documentElement.style.setProperty(
+                '--text-color',
+                theme === 'dark' ? '#f7fafc' : '#2d3748'
+            );
+            document.documentElement.style.setProperty(
+                '--secondary',
+                theme === 'dark' ? '#2d3748' : '#edf2f7'
+            );
+            document.documentElement.style.setProperty(
+                '--border',
+                theme === 'dark' ? '#4a5568' : '#e2e8f0'
+            );
+        }
+
+        // Следим за изменением темы
+        Telegram.WebApp.onEvent('themeChanged', updateTheme);
+        updateTheme();
+    </script>
+</body>
+</html>
