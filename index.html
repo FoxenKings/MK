@@ -552,7 +552,26 @@
             
             // Отправить данные в бот
             Telegram.WebApp.sendData(JSON.stringify(data));
-            Telegram.WebApp.close();
+            
+            // Отправка данных в LeadTech:
+    fetch('https://api.leadtech.ru/v1/leads', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'UneU0VIlvaqLvbQoISm4ZQ3E3PRc76xRl3pdupXP9TNu9qzkBgaHTCbr1fYK'
+        },
+        body: JSON.stringify({
+            action: action,
+            user_id: data.user.id,
+            source: 'Telegram Bot'
+        })
+    })
+    .then(response => response.json())
+    .then(result => console.log('LeadTech response:', result))
+    .catch(error => console.error('Ошибка отправки в LeadTech:', error));
+
+    Telegram.WebApp.close();
+}
         }
 
         // Преобразование action в читаемый текст
